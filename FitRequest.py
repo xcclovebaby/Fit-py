@@ -1,12 +1,9 @@
 #!/usr/bin/python3
 
-import time
 import requests
 import urllib
 from bs4 import BeautifulSoup
 import json
-
-COOKIE = None
 
 # cookie名称
 COOKIE_NAME = "sass_gym_shop_owner"
@@ -14,32 +11,45 @@ COOKIE_NAME = "sass_gym_shop_owner"
 LOGIN_URL = "https://www.styd.cn/cm/c1680b71/user/bind"
 HEAD = {"Content-Type": "application/x-www-form-urlencoded", "Connection": "keep-alive"}
 
-def smsCode(mobile, img_captcha):
-    public_key = "2868e6ba58d82517dd34b722f6be9b84"
-    source = "wx"
-    timestamp = int(time.time())
+
+def smsCode(cookie ,mobile, img_captcha):
+    result = requests.get("https://www.styd.cn/cm/c1680b71/user/bind")
+    soup = BeautifulSoup(result.content, 'lxml')
+    public_key = soup.find_all('input', attrs={'name': 'public_key'})
+    timestamp = soup.find_all('input', attrs={'name': 'timestamp'})
+    public_key = public_key.pop(0)['value']
+    source = 'wx'
+    timestamp = timestamp.pop(0)['value']
     data = urllib.parse.urlencode(
-        {"public_key": public_key,
-         "source": source,
+        {"mobile": mobile,
          "timestamp": timestamp,
+         "public_key": public_key,
+         "source": source,
          "img_captcha": img_captcha,
-         "mobile": mobile}
+         }
     ).encode(encoding='utf-8')
-    res = requests.post("https://www.styd.cn/web/user/get_captcha", data=data, headers=HEAD)
+    header = {"Content-Type": "application/x-www-form-urlencoded",
+            "Connection": "keep-alive",
+            "origin": "https://www.styd.cn",
+            "referer": "https://www.styd.cn/cm/c1680b71/user/bind",
+            "user-agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Mobile Safari/537.36 FS"}
+    res = requests.post("https://www.styd.cn/web/user/get_captcha", data=data, cookies=cookie, headers=header)
     print("打印获取短信返回信息 %s" % (res.content.decode('unicode_escape')))
+
 
 def login(mobile, captcha):
     data = urllib.parse.urlencode({"mobile": mobile, "captcha": captcha}).encode(encoding='utf-8')
     res = requests.post(LOGIN_URL, data=data, headers=HEAD)
     cookie = res.cookies[COOKIE_NAME]
-    COOKIE = res.cookies
     print("打印登录返回信息 %s" % (res.content.decode('unicode_escape')))
     print("打印cookie信息 %s" % (cookie))
+    return res.cookies
 
-def search(storeId, date):
+
+def search(cookie, storeId, date):
     result = requests.get(
         "https://www.styd.cn/cm/c1680b71/default/search?date=" + date + "&shop_id=" + storeId.__str__() + "&type=1",
-        cookies=COOKIE, headers=HEAD)
+        cookies=cookie, headers=HEAD)
     soup = BeautifulSoup(result.content, 'lxml')
     print("获取返回数据 %s" % (soup.get_text()))
     tags = soup.find_all("a")
@@ -50,15 +60,15 @@ def search(storeId, date):
     return id
 
 
-def submit(cardId, id, num):
+def submit(cookie, cardId, id, num):
     data = urllib.parse.urlencode({"class_type": 1, "class_id": id, "team_mc_id": cardId, "seat_number[]": num}).encode(
         encoding='utf-8')
-    res = requests.post("https://www.styd.cn/cm/c1680b71/course/order_confirm", data=data, cookies=COOKIE, headers=HEAD)
+    res = requests.post("https://www.styd.cn/cm/c1680b71/course/order_confirm", data=data, cookies=cookie, headers=HEAD)
     print("打印抢单车号返回信息 %s" % (res.content.decode('unicode_escape')))
     try:
         data = json.loads(res.content.decode('unicode_escape'))
         code = data['code']
-        if(code != -1):
+        if (code != -1):
             return True
         return False
     except Exception:

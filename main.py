@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QFont, QPixmap, QImage, QTextCursor
 from PyQt5.QtCore import pyqtSignal, QObject
 import requests
-from FitRequest import smsCode, login, search, submit, FIT_STORE, COOKIE
+from FitRequest import smsCode, login, search, submit, FIT_STORE
 import time
 import threading
 
@@ -22,9 +22,20 @@ class MainUi(QWidget):
     def __init__(self):
         super().__init__()
         self.initGUI()
-        self.count = 0
+        self.cookieSubmit = None
         # 注掉这句就可以打印到控制台，方便调试
         sys.stdout = Stream(newText=self.onUpdateText)
+
+        print("-------------------------------------")
+        print("---------------使用须知---------------")
+        print("提示: 在第一次使用该程序,需要联系作者帮忙查询菲特会员卡ID")
+        print("提示: 预约抢号功能只能在所填日期48小时内进行抢号")
+        print("提示: 单车号的座次请使用菲特公众号自行查询")
+        print("在执行程序时,程序出现未响应为正常情况,因为没使用多线程所以该程序处于阻塞状态")
+        print("使用预约功能该程序会进入阻塞状态, 当时间达到指定日期的前48小时后开始抢单车号")
+        print("使用抢号功能程序会立即执行抢单车号任务!")
+        print("-------------------------------------")
+        print("-------------------------------------")
 
     def onUpdateText(self, text):
         """Write console output to text widget."""
@@ -67,46 +78,50 @@ class MainUi(QWidget):
 
         # 会员卡ID
         self.cardEdit = QLineEdit(self)
-        self.cardEdit.move(250, 30)
         self.cardEdit.resize(200, 40)
         self.cardEdit.setPlaceholderText("请输入会员卡ID")
 
         # 手机号输入框
         self.mobileEdit = QLineEdit(self)
-        self.mobileEdit.move(250, 80)
         self.mobileEdit.resize(200, 40)
         self.mobileEdit.setPlaceholderText("请输入手机号")
 
-        # 图形验证码输入框
-        self.codeEdit = QLineEdit(self)
-        self.codeEdit.move(250, 130)
-        self.codeEdit.resize(200, 40)
-        self.codeEdit.setPlaceholderText("请输入图形验证码")
-
         # 短信验证码输入框
         self.smscodeEdit = QLineEdit(self)
-        self.smscodeEdit.move(250, 180)
         self.smscodeEdit.resize(200, 40)
         self.smscodeEdit.setPlaceholderText("请输入短信验证码")
 
-        self.smsbtn = QPushButton('获取验证码', self)
-        self.smsbtn.move(450, 180)
-        self.smsbtn.resize(100, 45)
-        self.smsbtn.clicked.connect(self.findSmsCode)
-
         # 日期输入框
         self.dateEdit = QLineEdit(self)
-        self.dateEdit.move(250, 230)
         self.dateEdit.resize(230, 40)
         self.dateEdit.setPlaceholderText("请输入日期, 格式为2020-02-01")
 
+        # self.cardEdit.move(250, 60)
+        # self.mobileEdit.move(250, 110)
+        # self.dateEdit.move(250, 210)
+        # self.smscodeEdit.move(250, 160)
+
+        # 图形验证码输入框
+        self.codeEdit = QLineEdit(self)
+        self.codeEdit.resize(200, 40)
+        self.codeEdit.setPlaceholderText("请输入图形验证码")
+
         # 图形验证码
-        res = requests.get(url)
-        img = QImage.fromData(res.content)
         self.img = MyQLabel(self)
-        self.img.setPixmap(QPixmap.fromImage(img))
+        self.flush()
         self.img.move(450, 133)
         self.img.connect_customized_slot(self.flush)
+
+        self.smsbtn = QPushButton('获取验证码', self)
+        self.smsbtn.resize(100, 45)
+        self.smsbtn.clicked.connect(self.findSmsCode)
+
+        self.cardEdit.move(250, 30)
+        self.mobileEdit.move(250, 80)
+        self.codeEdit.move(250, 130)
+        self.smscodeEdit.move(250, 180)
+        self.dateEdit.move(250, 230)
+        self.smsbtn.move(450, 180)
 
         # 单选按钮
         layout = QHBoxLayout()  # 实例化一个布局
@@ -148,32 +163,23 @@ class MainUi(QWidget):
         layout.addWidget(self.btn9)
         self.setLayout(layout)  # 界面添加 layout
 
-    def flush(self):
-        res = requests.get(url)
-        img = QImage.fromData(res.content)
-        self.img.setPixmap(QPixmap.fromImage(img))
-
     def center(self):
         qr = self.frameGeometry()
         cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
-    def findSmsCode(self):
-        print("-------------------------------------")
-        print("---------------使用须知---------------")
-        print("提示: 在第一次使用该程序,需要联系作者帮忙查询菲特会员卡ID")
-        print("提示: 预约抢号功能只能在所填日期48小时内进行抢号")
-        print("提示: 单车号的座次请使用菲特公众号自行查询")
-        print("在执行程序时,程序出现未响应为正常情况,因为没使用多线程所以该程序处于阻塞状态")
-        print("使用预约功能该程序会进入阻塞状态, 当时间达到指定日期的前48小时后开始抢单车号")
-        print("使用抢号功能程序会立即执行抢单车号任务!")
-        print("-------------------------------------")
-        print("-------------------------------------")
+    def flush(self):
+        res = requests.get(url)
+        img = QImage.fromData(res.content)
+        self.img.setPixmap(QPixmap.fromImage(img))
+        self.imgCookie = res.cookies
 
+    def findSmsCode(self):
         mobile = self.mobileEdit.text()
         code = self.codeEdit.text()
-        smsCode(mobile, code)
+        smsCode(self.imgCookie, mobile, code)
+        self.flush()
 
     def schedule(self):
         date = self.dateEdit.text()
@@ -188,15 +194,17 @@ class MainUi(QWidget):
         mobile = self.mobileEdit.text()
         smscode = self.smscodeEdit.text()
         date = self.dateEdit.text()
-        if COOKIE == None:
-            login(mobile, smscode)
-        id = search(self.store, date)
+        if self.cookieSubmit == None:
+            self.cookieSubmit = login(mobile, smscode)
+        print("打印保存的cookie信息", self.cookieSubmit)
+        id = search(self.cookieSubmit, self.store, date)
         flag = False
-        while flag == False and self.count < 20:
-            flag = submit(self.cardEdit.text(), id, 1)
+        count = 0
+        while flag == False and count < 1:
+            flag = submit(self.cookieSubmit, self.cardEdit.text(), id, 1)
             time.sleep(5)
-            self.count += 1
-            print("第%d次预约完毕, 返回成功结果" % (self.count), flag)
+            count += 1
+            print("第%d次预约完毕, 返回成功结果" % (count), flag)
 
     def btnstate(self, btn):  # 自定义点击事件函数
         keys = FIT_STORE.keys()
