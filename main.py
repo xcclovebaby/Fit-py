@@ -93,8 +93,12 @@ class MainUi(QWidget):
 
         # 日期输入框
         self.dateEdit = QLineEdit(self)
-        self.dateEdit.resize(230, 40)
+        self.dateEdit.resize(200, 40)
         self.dateEdit.setPlaceholderText("请输入日期, 格式为2020-02-01")
+
+        self.numEdit = QLineEdit(self)
+        self.numEdit.resize(120, 40)
+        self.numEdit.setPlaceholderText("请输入单车号:1")
 
         # self.cardEdit.move(250, 60)
         # self.mobileEdit.move(250, 110)
@@ -121,6 +125,7 @@ class MainUi(QWidget):
         self.codeEdit.move(250, 130)
         self.smscodeEdit.move(250, 180)
         self.dateEdit.move(250, 230)
+        self.numEdit.move(450, 230)
         self.smsbtn.move(450, 180)
 
         # 单选按钮
@@ -193,6 +198,7 @@ class MainUi(QWidget):
         """Runs the main function."""
         mobile = self.mobileEdit.text()
         smscode = self.smscodeEdit.text()
+        num = self.numEdit.text()
         date = self.dateEdit.text()
         if self.cookieSubmit == None:
             self.cookieSubmit = login(mobile, smscode)
@@ -200,8 +206,8 @@ class MainUi(QWidget):
         id = search(self.cookieSubmit, self.store, date)
         flag = False
         count = 0
-        while flag == False and count < 1:
-            flag = submit(self.cookieSubmit, self.cardEdit.text(), id, 1)
+        while flag == False and count < 20:
+            flag = submit(self.cookieSubmit, self.cardEdit.text(), id, num)
             time.sleep(5)
             count += 1
             print("第%d次预约完毕, 返回成功结果" % (count), flag)
