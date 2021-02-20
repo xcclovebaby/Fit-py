@@ -190,7 +190,7 @@ class MainUi(QWidget):
         date = self.dateEdit.text()
         datetime = time.mktime(time.strptime(str(date) + ' 09:00:00', '%Y-%m-%d %H:%M:%S'))
         while True:
-            now = time.time() + (48 * 3600)
+            now = time.time() + (24 * 3600)
             if datetime < now:
                 break
             print((time.time() - datetime) / 1000)
