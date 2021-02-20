@@ -189,9 +189,11 @@ class MainUi(QWidget):
     def schedule(self):
         date = self.dateEdit.text()
         datetime = time.mktime(time.strptime(str(date) + ' 09:00:00', '%Y-%m-%d %H:%M:%S'))
-        while datetime < (time.time() + (48 * 3600 * 1000)):
+        now = time.time() + (48 * 3600)
+        while True:
+            if datetime > now:
+                break
             print((time.time() - datetime) / 1000)
-            time.sleep(500)
         self.OnBtnClicked()
 
     def OnBtnClicked(self):
