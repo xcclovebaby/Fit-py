@@ -193,7 +193,6 @@ class MainUi(QWidget):
             now = time.time() + (24 * 3600)
             if datetime < now:
                 break
-            print((time.time() - datetime) / 1000)
         self.OnBtnClicked()
 
     def OnBtnClicked(self):

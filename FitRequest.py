@@ -67,8 +67,8 @@ def submit(cookie, cardId, id, num):
     print("打印抢单车号返回信息 %s" % (res.content.decode('unicode_escape')))
     try:
         data = json.loads(res.content.decode('unicode_escape'))
-        code = data['code']
-        if (code != -1):
+        code = data.get("code")
+        if code == 200 or code == '200':
             return True
         return False
     except Exception:
