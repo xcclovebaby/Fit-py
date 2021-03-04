@@ -61,9 +61,16 @@ def search(cookie, storeId, date):
 
 
 def submit(cookie, cardId, id, num):
+
+    header = {"Content-Type": "application/x-www-form-urlencoded",
+     "Connection": "keep-alive",
+     "origin": "https://www.styd.cn",
+     "referer": "https://www.styd.cn/cm/c1680b71/course/seat?id=" + id + "&fee_type=0",
+     "user-agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Mobile Safari/537.36 FS"}
+
     data = urllib.parse.urlencode({"class_type": 1, "class_id": id, "team_mc_id": cardId, "seat_number[]": num}).encode(
         encoding='utf-8')
-    res = requests.post("https://www.styd.cn/cm/c1680b71/course/order_confirm", data=data, cookies=cookie, headers=HEAD)
+    res = requests.post("https://www.styd.cn/cm/c1680b71/course/order_confirm", data=data, cookies=cookie, headers=header)
     print("打印抢单车号返回信息 %s" % (res.content.decode('unicode_escape')))
     try:
         data = json.loads(res.content.decode('unicode_escape'))

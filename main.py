@@ -189,11 +189,28 @@ class MainUi(QWidget):
     def schedule(self):
         date = self.dateEdit.text()
         datetime = time.mktime(time.strptime(str(date) + ' 09:00:00', '%Y-%m-%d %H:%M:%S'))
+
+        mobile = self.mobileEdit.text()
+        smscode = self.smscodeEdit.text()
+        num = self.numEdit.text()
+        date = self.dateEdit.text()
+        if self.cookieSubmit == None:
+            self.cookieSubmit = login(mobile, smscode)
+        print("打印保存的cookie信息", self.cookieSubmit)
+        id = search(self.cookieSubmit, self.store, date)
+
         while True:
             now = time.time() + (24 * 3600)
             if datetime < now:
                 break
-        self.OnBtnClicked()
+
+        flag = False
+        count = 0
+        while flag == False and count < 20:
+            flag = submit(self.cookieSubmit, self.cardEdit.text(), id, num)
+            time.sleep(5)
+            count += 1
+            print("第%d次预约完毕, 返回成功结果" % (count), flag)
 
     def OnBtnClicked(self):
         """Runs the main function."""
