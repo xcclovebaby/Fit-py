@@ -254,11 +254,12 @@ class MyQLabel(QLabel):
     def connect_customized_slot(self, func):
         self.clicked.connect(func)
 
-# 会员卡ID 8937756
 def main():
     app = QApplication(sys.argv)
     gui = MainUi()
     gui.show()
+    # 请指定会员卡ID
+    gui.cardEdit.setText('8937756')
     sys.exit(app.exec_())
 
 
